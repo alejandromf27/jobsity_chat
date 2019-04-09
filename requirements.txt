@@ -1,0 +1,50 @@
+js libs were imported from bootstrap, you need internet to load them
+
+
+Python 3.5+  (I use python v=3.6.6)
+
+sudo apt-get install python3-pip
+Django 1.11+ (I use django v=2.1.3)
+sudo pip3 install django
+
+#libs Python
+
+asgiref==2.3.0
+channels==2.1.0
+channels_redis==2.1.1
+
+#send sync message in chat
+sudo apt install redis-server (I use Redis server v=4.0.9)
+
+
+#rabbitmq to async message in chat
+sudo apt-get install rabbitmq-server #install
+sudo service rabbitmq-server restart #restart 
+sudo rabbitmqctl status  #check status
+
+#celery
+sudo pip3 install celery
+
+sudo pip3 install anyjson  #error because i havent this lib
+
+#run project
+cd /jobsitychat
+python3 manage.py migrate --run-syncdb
+python3 manage.py runserver --ensecure
+
+#create superuser django
+cd /jobsitychat
+python3 manage.py createsuperuser
+
+#run celery
+cd /jobsitychat
+celery -A jobsitychat worker -l DEBUG
+
+#for test 
+pip3 install selenium
+pip3 install webdriver-manager
+
+#execute test
+python3 manage.py test chat.tests
+
+

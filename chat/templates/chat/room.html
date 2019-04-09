@@ -1,0 +1,242 @@
+<!-- chat/templates/chat/room.html -->
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8"/>
+    <title>Chat Room</title>
+    <link rel="stylesheet" text = 'html/css' href="{% static 'css/chat.css' %}" />
+</head>
+<body>
+
+<div class="container-my">
+    <div class="row">
+        <section class="content">
+			<h1>Chat Rooms</h1>
+			<div class="col-md-4 ">
+				<div class="panel panel-primary">
+					<div class="panel-body">
+
+						<div class="table-container">
+							<table class="table">
+								<tbody>
+                                    {% for room in rooms %}
+									<tr data-status="pagado">
+
+										<td>
+											<a href="/jobsitychat/{{ room }}" class="star">
+												<i class="glyphicon glyphicon-star"></i>
+											</a>
+										</td>
+										<td>
+											<div class="media">
+												<a href="/jobsitychat/{{room}}" class="pull-left">
+													<h4 class="title">
+														{{ room }}
+													</h4>
+												</a>
+											</div>
+										</td>
+
+									</tr>
+                                    {% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+                    <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="room-name-input" type="text" class="form-control input-sm" placeholder="Create a new room here..." />
+                        <span class="input-group-btn">
+                            <button class="btn btn-warning btn-sm" id="room-name-submit">
+                                Enter</button>
+                        </span>
+                    </div>
+                </div>
+				</div>
+			</div>
+		</section>
+        <div class="col-md-8">
+            <div class="panel panel-primary" style="height: 500px;">
+                <div class="panel-heading">
+                    <span class="glyphicon glyphicon-comment"></span> Chat  {{ room_name_json }}  ROOM - {{ username }}
+
+                </div>
+
+            <div class="panel-collapse" id="collapseOne" >
+                <div class="panel-body" style="height: 400px;">
+                    <ul class="chat">
+
+                        {% for message in messages %}
+                            {% if message.author == user %}
+                            <li class="">
+                            <div class="" align="right">
+                                <div class="header">
+                                    <font color="#FA6F57"><strong>{{ message.author.username }}</strong></font>
+                                </div>
+                                <p>
+
+                                    <small class="text-muted">
+                                        <span class="glyphicon glyphicon-time"></span>
+                                        {{ message.timestamp }}
+                                    </small>
+                                </p>
+                                <p>
+                                    {{ message.content }}
+                                </p>
+                            </div>
+                        </li>
+                        {% else %}
+                        <li class="">
+                            <div class="" align="left">
+                                <div class="header">
+                                    <font color="#55C1E7"><strong>{{ message.author.username }}</strong></font>
+                                </div>
+                                <p>
+
+                                    <small class="text-muted">
+                                        <span class="glyphicon glyphicon-time"></span>
+                                        {{ message.timestamp }}
+                                    </small>
+                                </p>
+                                <p>
+                                    {{ message.content }}
+                                </p>
+                            </div>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                    </ul>
+                </div>
+                <div class="panel-footer">
+                    <div class="input-group">
+                        <input id="chat-message-input" type="text" class="form-control input-sm" placeholder="Type your message here..." />
+                        <span class="input-group-btn">
+                            <button class="btn btn-warning btn-sm" id="chat-message-submit">
+                                Send</button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+
+<script src="https://code.jquery.com/jquery-1.11.1.min.js"></script>
+<link href="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
+<script src="https://netdna.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+
+
+<script>
+
+$(function () {
+  $('.panel-body').scrollTop(1E10);
+});
+
+
+    document.querySelector('#room-name-input').focus();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#room-name-submit').click();
+            }
+        };
+
+        document.querySelector('#room-name-submit').onclick = function(e) {
+            var roomName = document.querySelector('#room-name-input').value;
+            window.location.pathname = '/jobsitychat/' + roomName + '/';
+        };
+
+    var roomName = {{ room_name_json }};
+    var username = {{ username }};
+    var bottom = $('.panel-body').height();
+
+    var chatSocket = new WebSocket(
+        'ws://' + window.location.host +
+        '/ws/jobsitychat/' + roomName + '/');
+
+    chatSocket.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+        var message = data['message']['content'];
+        var author = data['message']['author'];
+        var timestamp = data['message']['timestamp'];
+
+
+        if (author == username){
+            var liTag = $('<li />', { 'className': 'right clearfix'})
+
+                .append(
+                    $('<div />', {'className': 'chat-body clearfix', 'align': 'right'})
+                        .append(
+                            $('<div />', {'className': 'header'})
+                                .append('<font color="#FA6F57"><strong>'+author+'</strong></font>')
+                                .append(
+                                    $('<p/>')
+                                        .append($('<small/>', {'className': ' text-muted'}).html('<span class="glyphicon glyphicon-time"></span>' + timestamp))
+
+                                )
+                                .append('<p>' + message + '</p>')
+                        )
+
+                );
+
+
+
+        } else {
+           var liTag = $('<li />', { 'className': 'left clearfix'})
+
+                .append(
+                    $('<div />', {'className': 'chat-body clearfix', 'align': 'left'})
+                        .append(
+                            $('<div />', {'className': 'header'})
+                                .append('<font color="#55C1E7"><strong>'+author+'</strong></font>')
+                                .append(
+                                    $('<p/>')
+                                        .append($('<small/>', {'className': ' text-muted'}).html('<span class="glyphicon glyphicon-time"></span>' + timestamp))
+
+                                )
+                                .append('<p>' + message + '</p>')
+                        )
+
+                );
+        }
+
+        $('.chat').append(liTag);
+
+        $('.panel-body').scrollTop(1E10);
+
+
+    };
+
+        chatSocket.onclose = function(e) {
+        console.error('Chat socket closed unexpectedly');
+    };
+
+    document.querySelector('#chat-message-input').focus();
+    document.querySelector('#chat-message-input').onkeyup = function(e) {
+        if (e.keyCode === 13) {  // enter, return
+            document.querySelector('#chat-message-submit').click();
+        }
+    };
+
+    document.querySelector('#chat-message-submit').onclick = function(e) {
+        var messageInputDom = document.querySelector('#chat-message-input');
+        var message = messageInputDom.value;
+        chatSocket.send(JSON.stringify({
+            'message': message,
+            'command': 'new_message',
+            'from': username,
+            'room': roomName
+        }));
+
+        messageInputDom.value = '';
+    };
+</script>
+</html>
+
+
